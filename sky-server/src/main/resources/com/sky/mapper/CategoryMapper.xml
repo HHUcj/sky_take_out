@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.CategoryMapper">
+    <insert id="addCategory">
+        insert into category(type, name, sort, status, create_time, update_time, create_user, update_user)
+        values (#{type}, #{name}, #{sort}, #{status}, #{createTime}, #{updateTime}, #{createUser}, #{updateUser})
+    </insert>
+
+
+    <update id="updateCategory">
+        update category
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="sort != null">
+                sort = #{sort},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+            <if test="updateUser != null">
+                update_user = #{updateUser}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+
+    <delete id="delCatgoryById">
+        delete from category where id = #{id}
+    </delete>
+
+    <select id="count" resultType="java.lang.Long">
+        select count(*)
+        from category;
+    </select>
+
+
+    <select id="page" resultType="com.sky.entity.Category">
+        select * from category
+        <where>
+            <if test="name != null and name != ''">
+                name like concat('%', #{name}, '%')
+            </if>
+            <if test="type != null">
+                and type = #{type}
+            </if>
+        </where>
+        order by update_time desc, sort asc
+        limit #{pageNo},#{pageSize}
+    </select>
+
+
+    <select id="getCategoryByType" resultType="com.sky.entity.Category">
+        select *
+        from category
+        where type = #{type}
+        order by update_time desc, sort asc
+    </select>
+
+
+    <select id="getCategory" resultType="com.sky.entity.Category">
+        select * from category;
+    </select>
+
+</mapper>

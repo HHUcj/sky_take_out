@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sky.mapper.OrderMapper">
+
+    <insert id="addOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into orders (number, user_id, address_book_id, order_time, checkout_time, amount, remark, phone, address,
+                            user_name, consignee, cancel_reason, rejection_reason, cancel_time, estimated_delivery_time,
+                            delivery_time, pack_amount, tableware_number)
+        VALUES (#{number}, #{userId}, #{addressBookId}, #{orderTime}, #{checkoutTime}, #{amount}, #{remark}, #{phone},
+                #{address}, #{userName}, #{consignee}, #{cancelReason}, #{rejectionReason}, #{cancelTime},
+                #{estimatedDeliveryTime}, #{deliveryTime}, #{packAmount}, #{tablewareNumber})
+    </insert>
+
+
+    <insert id="batchAddOrderDetail">
+        insert into order_detail (name, image, order_id, dish_id, setmeal_id, dish_flavor, amount, number)
+        VALUES
+        <foreach collection="orderDetailList" item="od" separator=",">
+            (#{od.name}, #{od.image}, #{od.orderId}, #{od.dishId}, #{od.setmealId}, #{od.dishFlavor}, #{od.amount},
+            #{od.number})
+        </foreach>
+    </insert>
+
+
+    <update id="confirm">
+        update orders
+        set status = 3
+        where id = #{id}
+    </update>
+    <update id="rejection">
+        update orders
+        set status           = 6,
+            rejection_reason = #{rejectionReason}
+        where id = #{id}
+    </update>
+    <update id="cancelOrder">
+        update orders
+        set status        = 6,
+            cancel_reason = #{cancelReason}
+        where id = #{id}
+    </update>
+    <update id="delivery">
+        update orders
+        set status = 4
+        where id = #{id}
+    </update>
+    <update id="complete">
+        update orders
+        set status = 5
+        where id = #{id}
+    </update>
+    <update id="update">
+        update orders
+        set status        = #{status},
+            cancel_reason = #{cancelReason},
+            cancel_time   = #{cancelTime}
+        where id = #{id}
+    </update>
+
+
+    <delete id="cancel">
+        update orders
+        <set>
+            <if test="cancelled != null">
+                status = #{cancelled}
+            </if>
+        </set>
+        where id = #{id}
+    </delete>
+
+
+    <select id="count" resultType="java.lang.Long">
+        select count(*) from orders
+        <where>
+            <if test="status != null">
+                status = #{status}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getHistoryOrders" resultMap="OrderVO">
+        select *
+        from orders
+        <where>
+            <if test="status != null">
+                status = #{status}
+            </if>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+        </where>
+        order by order_time desc
+        limit #{pageNo}, #{pageSize}
+    </select>
+
+
+    <select id="getFromOrderDetailById" resultType="com.sky.entity.OrderDetail">
+        select *
+        from order_detail
+        where order_id = #{id}
+    </select>
+
+
+    <select id="getOrderDetail" resultMap="OrderVO">
+        select *
+        from orders
+        where id = #{id}
+    </select>
+
+
+    <resultMap id="OrderVO" type="com.sky.vo.OrderVO">
+        <id property="id" column="id"></id>
+        <collection property="orderDetailList" ofType="com.sky.entity.OrderDetail" select="getFromOrderDetailById"
+                    column="id"></collection>
+    </resultMap>
+
+
+    <select id="orderCount" resultType="java.lang.Long">
+        select count(*)
+        from orders
+        <where>
+            <if test="beginTime != null">
+                order_time > #{beginTime}
+            </if>
+            <if test="endTime != null">
+                and order_time &lt; #{endTime}
+            </if>
+            <if test="number != null and number != ''">
+                and number = #{number}
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone = #{phone}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="conditionSearch" resultType="com.sky.vo.OrderVO">
+        select *
+        from orders
+        <where>
+            <if test="beginTime != null">
+                order_time &gt; #{beginTime}
+            </if>
+            <if test="endTime != null">
+                and order_time &lt; #{endTime}
+            </if>
+            <if test="number != null and number != ''">
+                and number = #{number}
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone = #{phone}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by order_time desc
+        limit #{pageNo}, #{pageSize}
+    </select>
+
+
+    <select id="statisticsToBeConfirmed" resultType="java.lang.Integer">
+        select count(*)
+        from orders
+        where status = 2
+    </select>
+    <select id="statisticsConfirmed" resultType="java.lang.Integer">
+        select count(*)
+        from orders
+        where status = 3
+    </select>
+    <select id="statisticsDeliveryInProgress" resultType="java.lang.Integer">
+        select count(*)
+        from orders
+        where status = 4
+    </select>
+
+
+    <select id="getAllTimeOutOrders" resultType="com.sky.entity.Orders">
+        select *
+        from orders
+        where status = #{status}
+          and order_time &lt;= #{time};
+    </select>
+
+
+    <select id="getAmount" resultType="java.lang.Double">
+        select sum(amount) from orders
+        <where>
+            <if test="begin != null">
+                order_time &gt;= #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt;= #{end}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getOrderCnt" resultType="java.lang.Integer">
+        select count(*)
+        from orders
+        <where>
+            <if test="begin != null">
+                order_time &gt;= #{begin}
+            </if>
+            <if test="end != null">
+                and order_time &lt;= #{end}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getTop10Report" resultType="com.sky.dto.GoodsSalesDTO">
+        select order_detail.name, sum(order_detail.number) number
+        from order_detail,orders
+        where order_detail.order_id = orders.id and orders.status = 5
+          <if test="beginTime != null">
+              and orders.order_time &gt;= #{beginTime}
+          </if>
+          <if test="endTime != null">
+              and orders.order_time &lt;= #{endTime}
+          </if>
+        group by order_detail.name
+        order by number desc
+        limit 0,10
+    </select>
+
+    <select id="getOrderByNumber" resultType="com.sky.entity.Orders">
+        select * from orders where number = #{orderNumber}
+    </select>
+
+
+</mapper>
