@@ -8,8 +8,8 @@ sky:
     password: 123456
   alioss:
     endpoint: https://oss-cn-nanjing.aliyuncs.com
-    access-key-id: LTAI5tQMRbnRELt1Bwy9gzFt
-    access-key-secret: 9YijQMZFpYPFb5OuDNTNI4kavjNCVR
+#    access-key-id: LTAI5tQMRbnRELt1Bwy9gzFt
+#    access-key-secret: 9YijQMZFpYPFb5OuDNTNI4kavjNCVR
     bucket-name: web-cj-tlias
   redis:
     host: localhost
